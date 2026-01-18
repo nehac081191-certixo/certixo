@@ -1,0 +1,31 @@
+name: Database Schema Sync
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/prisma/schema.prisma'
+
+jobs:
+  db-push:
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Push Schema to Production DB
+        run: npx prisma db push
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

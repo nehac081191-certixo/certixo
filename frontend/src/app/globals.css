@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui;
+  --font-heading: var(--font-outfit), sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+
+  /* Institutional Primary Palette */
+  --color-primary: #6366f1;
+  --color-primary-foreground: #ffffff;
+
+  /* Map core variables to Tailwind utilities */
+  --color-background: var(--bg-main);
+  --color-foreground: var(--text-main);
+  --color-card: var(--card-main);
+  --color-muted: var(--muted-main);
+  --color-border: var(--border-main);
+}
+
+:root {
+  /* Institutional Midnight (Dark) */
+  --bg-main: #0B0E14;
+  --text-main: #F1F5F9;
+  --card-main: #141824;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --card-bg: rgba(20, 24, 36, 0.8);
+  --muted-main: #1C2333;
+  --muted-foreground: #94A3B8;
+  --border-main: rgba(255, 255, 255, 0.08);
+
+  --sidebar-bg: #090B10;
+  --text-gradient: linear-gradient(135deg, #FFFFFF 0%, #94A3B8 100%);
+  --nav-active: rgba(99, 102, 241, 0.12);
+  --glow-opacity: 0.15;
+}
+
+.light {
+  /* Scrut-inspired Executive (Light) */
+  --bg-main: #FFFFFF;
+  --text-main: #131722;
+  --card-main: #FFFFFF;
+  --card-border: #E8EDF5;
+  --card-bg: #FFFFFF;
+  --muted-main: #F8FAFC;
+  --muted-foreground: #718096;
+  --border-main: #E8EDF5;
+
+  --sidebar-bg: #FFFFFF;
+  --text-gradient: linear-gradient(135deg, #131722 0%, #4A5568 100%);
+  --nav-active: #F5F3FF;
+  --glow-opacity: 0.05;
+
+  --color-primary: #7C3AED;
+  /* Scrut-like purple */
+}
+
+/* Global Transition & Typography Overrides */
+html,
+body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  font-family: var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-heading {
+  font-family: var(--font-outfit), sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Premium Typography Patterns */
+.text-premium {
+  background: var(--text-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+/* Glassmorphism Depth Layer - Balanced */
+.glass-depth {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom Scrollbar - Minimalist */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-main);
+  border-radius: 20px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Glow Effects - Sophisticated */
+.glow-primary {
+  box-shadow: 0 0 30px rgba(99, 102, 241, var(--glow-opacity));
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.5s infinite;
+}
+
+/* Tab/Navbar Animations */
+.nav-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

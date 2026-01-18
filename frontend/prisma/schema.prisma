@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- GRC CORE ---
+
+enum AuditFramework {
+  SOC2
+  ISO27001
+  HIPAA
+  PCI
+}
+
+enum AuditType {
+  TypeI
+  TypeII
+  Surveillance
+  Internal
+}
+
+enum AuditStatus {
+  draft
+  in_progress
+  ready
+  exported
+}
+
+enum WizardStep {
+  CONTEXT
+  SCOPE
+  SYSTEMS
+  RISKS
+  EVIDENCE_PLAN
+  TIMELINE
+  OWNERS_TASKS
+  EXPORT
+}
+
+model AuditPlan {
+  id           String         @id @default(cuid())
+  framework    AuditFramework @default(SOC2)
+  auditType    AuditType      @default(TypeII)
+  startDate    String
+  endDate      String
+  status       AuditStatus    @default(draft)
+  currentStep  WizardStep     @default(CONTEXT)
+
+  scope        Json?
+  systems      Json?
+  risks        Json?
+  evidencePlan Json?
+  timeline     Json?
+  tasks        Json?
+  auditorPack  Json?
+  evidenceTasks EvidenceTask[]
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  lastAiRefinementAt DateTime?
+}
+
+// --- ASSET INVENTORY & INTEGRATIONS ---
+
+enum IntegrationProvider {
+  AWS
+  SERVICENOW
+  SAP_ERP
+  CSV
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  ERROR
+  SYNCING
+}
+
+model Integration {
+  id            String              @id @default(cuid())
+  provider      IntegrationProvider
+  displayName   String
+  config        Json                // Creds, API Keys, Scopes
+  status        IntegrationStatus   @default(CONNECTED)
+  healthStatus  String              @default("Healthy")
+  lastSyncAt    DateTime?
+  errorLogs     String?
+  syncSchedule  String              @default("0 * * * *") // Cron
+  
+  syncRuns      SyncRun[]
+  assets        Asset[]
+  
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+enum SyncStatus {
+  SUCCESS
+  FAILED
+  IN_PROGRESS
+}
+
+model SyncRun {
+  id             String      @id @default(cuid())
+  integrationId  String
+  integration    Integration @relation(fields: [integrationId], references: [id])
+  status         SyncStatus
+  startedAt      DateTime    @default(now())
+  endedAt        DateTime?
+  assetsSynced   Int         @default(0)
+  errorMessage   String?
+  rawPayloadPath String?     // Reference to blob storage for audit
+}
+
+model Asset {
+  id                  String      @id @default(cuid())
+  integrationId       String
+  integration         Integration @relation(fields: [integrationId], references: [id])
+  
+  // Canonical Normalized Fields
+  externalId          String      // Provider's ID (e.g. AWS ARN)
+  name                String
+  type                String      // EC2, RDS, S3, Laptop, User
+  provider            String      // Redundant for quick filtering
+  
+  owner               String?
+  environment         String?     // Production, Staging
+  dataClassification  String?     // Public, Internal, Restricted
+  encryptionStatus    Boolean     @default(false)
+  encryptionSignals   Json?       // Key IDs, Algorithm
+  
+  status              String      @default("active")
+  tags                String[]
+  
+  rawPayload          Json?       // Raw data for audit traceability
+  
+  history             AssetChange[]
+  
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@unique([integrationId, externalId])
+}
+
+model AssetChange {
+  id        String   @id @default(cuid())
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id])
+  changeType String   // CREATE, UPDATE, DELETE
+  diff      Json     // What changed
+  timestamp DateTime @default(now())
+}
+
+model EvidenceTask {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      String   @default("Not Uploaded") // Not Uploaded, Draft, Needs Attention, Uploaded
+  assignee    String?
+  department  String?
+  framework   String?
+  dueDate     DateTime?
+  
+  auditPlanId String?
+  auditPlan   AuditPlan? @relation(fields: [auditPlanId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Policy {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  category    String   @default("General")
+  status      String   @default("Draft") // Draft, Review, Approved, Retired
+  version     Int      @default(1)
+  owner       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model EvidenceExport {
+  id            String   @id @default(cuid())
+  name          String
+  framework     AuditFramework
+  periodStart   DateTime
+  periodEnd     DateTime
+  fileUrl       String
+  summary       String?  // AI Generated summary
+  artifactIndex Json?    // Links to specific assets/proofs
+  createdAt     DateTime @default(now())
+}
